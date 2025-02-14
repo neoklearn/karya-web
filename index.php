@@ -1,0 +1,173 @@
+<?php
+// index.php
+$worksFile = 'works.json';
+$worksData = [];
+if (file_exists($worksFile)) {
+  $json = file_get_contents($worksFile);
+  $worksData = json_decode($json, true);
+}
+session_start();
+?>
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Karya Publik</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    html,
+    body {
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    input,
+    textarea {
+      -webkit-user-select: text;
+      -moz-user-select: text;
+      -ms-user-select: text;
+      user-select: text;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #fff;
+    }
+
+    .navbar {
+      background: #007BFF;
+      padding: 10px 20px;
+      color: #fff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .navbar .nav-links a {
+      color: #fff;
+      text-decoration: none;
+      margin-right: 15px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .navbar .nav-links a:hover {
+      text-decoration: underline;
+    }
+
+    .navbar .nav-login a {
+      color: #fff;
+      text-decoration: none;
+      font-size: 16px;
+      border: 1px solid #fff;
+      padding: 5px 10px;
+      border-radius: 4px;
+    }
+
+    .navbar .nav-login a:hover {
+      background: #fff;
+      color: #007BFF;
+    }
+
+    .search-container {
+      margin-top: 20px;
+    }
+
+    .search-container input {
+      width: 100%;
+      max-width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+
+    .grid-item {
+      border: 1px solid #ccc;
+      padding: 15px;
+      margin-bottom: 15px;
+      background: #f9f9f9;
+    }
+
+    .grid-item h3 {
+      margin: 0 0 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Navigation Bar -->
+  <div class="navbar">
+    <div class="nav-links">
+      <a onclick="filterCategory('all')">All</a>
+      <a onclick="filterCategory('cerpen')">Cerpen</a>
+      <a onclick="filterCategory('ilmiyah')">Ilmiyah</a>
+      <a onclick="filterCategory('lainnya')">Lainnya</a>
+    </div>
+    <div class="nav-login">
+      <a href="admin/login.php">Login Admin</a>
+    </div>
+  </div>
+
+  <h1>Karya Publik</h1>
+
+  <!-- Search Box -->
+  <div class="search-container">
+    <input type="text" id="searchInput" placeholder="Cari karya...">
+  </div>
+
+  <!-- Daftar Karya -->
+  <?php if (!empty($worksData)): ?>
+    <?php foreach ($worksData as $work):
+      // Pastikan kategori diubah ke huruf kecil dan dipisahkan dengan koma
+      $categories = array_map('strtolower', $work['categories']);
+      $catStr = implode(',', $categories);
+    ?>
+      <div class="grid-item" data-title="<?php echo strtolower(htmlspecialchars($work['title'])); ?>" data-categories="<?php echo $catStr; ?>">
+        <h3><?php echo htmlspecialchars($work['title']); ?></h3>
+        <p><strong>Kategori:</strong> <?php echo htmlspecialchars(implode(', ', $work['categories'])); ?></p>
+        <?php if (isset($work['genre']) && !empty($work['genre'])): ?>
+          <p><strong>Genre:</strong> <?php echo htmlspecialchars(implode(', ', $work['genre'])); ?></p>
+        <?php endif; ?>
+        <p><a href="<?php echo htmlspecialchars($work['file']); ?>" target="_blank">Download PDF</a></p>
+      </div>
+    <?php endforeach; ?>
+  <?php else: ?>
+    <p>Tidak ada karya yang diupload.</p>
+  <?php endif; ?>
+
+  <script>
+    // Pencarian berdasarkan judul
+    const searchInput = document.getElementById('searchInput');
+    searchInput.addEventListener('keyup', function() {
+      const filter = this.value.toLowerCase();
+      const items = document.querySelectorAll('.grid-item');
+      items.forEach(item => {
+        const title = item.getAttribute('data-title');
+        item.style.display = (title.indexOf(filter) > -1) ? "block" : "none";
+      });
+    });
+
+    // Filter kategori berdasarkan data-categories
+    function filterCategory(category) {
+      const items = document.querySelectorAll('.grid-item');
+      items.forEach(item => {
+        // Dapatkan data-categories dan pisahkan menjadi array
+        const cats = item.getAttribute('data-categories').split(',');
+        // Jika kategori adalah 'all' atau array mengandung kategori (dalam huruf kecil)
+        if (category === 'all' || cats.includes(category)) {
+          item.style.display = "block";
+        } else {
+          item.style.display = "none";
+        }
+      });
+    }
+  </script>
+</body>
+
+</html>
